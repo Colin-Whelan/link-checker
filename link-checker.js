@@ -14,7 +14,7 @@ var rcConfig = require('rc')('linkchecker', {});
 
 const CACHE_FILE = 'cache-v1.json'
 
-module.exports = function(directory, options = {}, callback) {
+module.exports = function(directory, options = {}, callback) {
     options = {...rcConfig, ...options}
 
 	let cache = null
@@ -129,14 +129,12 @@ module.exports = function(directory, options = {}, callback) {
 					}
 				})
 			}	
-			if (linkSpecificOptions['url-ignore'] && linkSpecificOptions['url-ignore'].length > 0) {
-				const found = linkSpecificOptions['url-ignore'].some(ignore => {
-					return href.match(ignore) != null
-				})
-				if (found) {
-					debug('ignoring URL', href)
-					return
-				}
+			let found = null
+			if (href.match(/%.*%/)) found = href.match(/%.*%/)
+			if (href.match(/http(s|):\/\/example\.com(\/.*)/)) found = href.match(/http(s|):\/\/example\.com(\/.*)/)
+			if (found) {
+				console.log('ignoring URL', href)
+				return
 			}
 
 			if (href.indexOf('http://') != 0 && href.indexOf('https://') != 0) {
@@ -472,7 +470,7 @@ module.exports = function(directory, options = {}, callback) {
 		if (cache) {
 			fs.writeFileSync(path.join(options.httpCache, CACHE_FILE), JSON.stringify(cache, null, 2), 'utf8')
 		}
-		callback(null, {
+		callback({
 			stats: {
 				errors: errors,
 				warnings: warnings,
