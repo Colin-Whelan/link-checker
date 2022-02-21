@@ -55,10 +55,14 @@ module.exports = function(directory, options = {}, callback) {
     debug('scanning directory', directory)
     
     function getOverrideFor(target) {
+    	if (target.hostname) {
+    		errors.push(target)
+    	}		
         const url = target instanceof Error && target.response ? target.response.request.url // superagent error
             : typeof target === "object" ? target.request.url // superagent response
             : typeof target === "string" ? target // plain URL
             : null
+
 
         const matchingPattern = Array.from(options.overrides.keys()).find(
             pattern => pattern.exec(url)
@@ -130,10 +134,16 @@ module.exports = function(directory, options = {}, callback) {
 				})
 			}	
 			let found = null
-			if (href.match(/%.*%/)) found = href.match(/%.*%/)
-			if (href.match(/http(s|):\/\/example\.com(\/.*)/)) found = href.match(/http(s|):\/\/example\.com(\/.*)/)
+			let ampLinks = /%.*%/
+			if (href.match(ampLinks)) found = href.match(ampLinks)
+
+			let exampleLinks = /http(s|):(\/\/|)(www\.|)example\.com(\/.*)/
+			if (href.match(exampleLinks)) found = href.match(exampleLinks)
+
+			let linkedinLinks = /http(s|):(\/\/|)(www\.|)linkedin\.com(\/.*)/
+			if (href.match(linkedinLinks)) found = href.match(linkedinLinks)
 			if (found) {
-				console.log('ignoring URL', href)
+				debug('ignoring URL', href)
 				return
 			}
 
@@ -392,8 +402,9 @@ module.exports = function(directory, options = {}, callback) {
 				}
 			})
 		}).catch(error => {
-			console.log('WTF, this should not happen')
-			console.error(error)
+
+			// console.log('WTF, this should not happen')
+			// console.error(error)
 		})
 
 		const remoteAnchorLinksArray = Array.from(remoteAnchorLinks.keys())
@@ -462,6 +473,7 @@ module.exports = function(directory, options = {}, callback) {
 				}
 			})
 		}).catch(error => {
+
 			console.log('WTF, this should not happen')
 			console.error(error)
 		})
